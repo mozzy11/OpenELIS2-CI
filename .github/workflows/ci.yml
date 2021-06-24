@@ -1,9 +1,9 @@
 name: OpenELIS-Global-2 CI Build 
 on:
   push:
-    branches: [develop]
+    branches: [main]
   pull_request:
-    branches: [develop]
+    branches: [main]
   workflow_dispatch:
 
   jobs:
@@ -33,6 +33,6 @@ on:
       uses: actions/checkout@v2
       with:
         repository: ${{github.repository}} 
-        ref: develop 
+        ref: main 
     - name: Build OpenELIS-Global2
       run: mvn clean install -B    
