@@ -15,9 +15,9 @@
 		<maven.java.release>11</maven.java.release>
 
 		<major.version>2</major.version>
-		<minor.version>3</minor.version>
-		<state.version>3</state.version><!-- 0 = alpha, 1 = beta, 2 = rc, 3 = deployable -->
-		<fix.version>22</fix.version>
+		<minor.version>4</minor.version>
+		<state.version>2</state.version><!-- 0 = alpha, 1 = beta, 2 = rc, 3 = deployable -->
+		<fix.version>1</fix.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -32,6 +32,7 @@
 		<postgresql.version>42.2.9</postgresql.version>
 		<springframework.version>5.2.4.RELEASE</springframework.version>
 		<springsecurity.version>5.2.10.RELEASE</springsecurity.version>
+		<testContainersVersion>1.15.3</testContainersVersion>
 	</properties>
 
 	<dependencies>
@@ -332,6 +333,24 @@
 			<artifactId>spring-security-config</artifactId>
 			<version>${springsecurity.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+			<version>${springframework.version}</version>
+		</dependency>
+		<dependency>
+         	<groupId>org.mockito</groupId>
+         	<artifactId>mockito-core</artifactId>
+			 <scope>test</scope>
+        	<version>2.21.0</version>
+       	</dependency>	
+	    <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testContainersVersion}</version>
+            <scope>test</scope>
+       </dependency>
 		<!-- ASSORTED DEPENDENCIES (Sorted by artifactId) -->
 		<dependency>
 			<groupId>org.ajaxtags</groupId>
@@ -453,14 +472,12 @@
 		</dependency>
 
 	</dependencies>
-	
 	<repositories>
 		<repository>
 			<id>jaspersoft-third-party</id>
 			<url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/</url>
 		</repository>
 	</repositories>	
-
 	<build>
 		<finalName>OpenELIS-Global</finalName>
 		<resources>
