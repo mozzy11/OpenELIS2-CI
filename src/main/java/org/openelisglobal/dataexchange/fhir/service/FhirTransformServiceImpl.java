@@ -55,6 +55,7 @@ import org.openelisglobal.common.services.IStatusService;
 import org.openelisglobal.common.services.SampleAddService.SampleTestCollection;
 import org.openelisglobal.common.services.StatusService.AnalysisStatus;
 import org.openelisglobal.common.services.StatusService.OrderStatus;
+import org.openelisglobal.common.services.TableIdService;
 import org.openelisglobal.common.util.DateUtil;
 import org.openelisglobal.dataexchange.fhir.FhirConfig;
 import org.openelisglobal.dataexchange.fhir.exception.FhirLocalPersistingException;
@@ -79,6 +80,8 @@ import org.openelisglobal.patient.valueholder.Patient;
 import org.openelisglobal.person.valueholder.Person;
 import org.openelisglobal.provider.service.ProviderService;
 import org.openelisglobal.provider.valueholder.Provider;
+import org.openelisglobal.referral.action.beanitems.ReferralItem;
+import org.openelisglobal.referral.service.ReferralSetService;
 import org.openelisglobal.result.action.util.ResultSet;
 import org.openelisglobal.result.action.util.ResultsUpdateDataSet;
 import org.openelisglobal.result.service.ResultService;
@@ -140,6 +143,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     private IStatusService statusService;
     @Autowired
     private ProviderService providerService;
+    @Autowired
+    private ReferralSetService referralSetService;
 
     @Transactional
     @Async
@@ -297,7 +302,8 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     @Async
     @Transactional(readOnly = true)
     public void transformPersistOrderEntryFhirObjects(SamplePatientUpdateData updateData,
-            PatientManagementInfo patientInfo) throws FhirLocalPersistingException {
+            PatientManagementInfo patientInfo, boolean useReferral, List<ReferralItem> referralItems)
+            throws FhirLocalPersistingException {
         LogEvent.logTrace(this.getClass().getName(), "createFhirFromSamplePatient",
                 "accessionNumber - " + updateData.getAccessionNumber());
         CountingTempIdGenerator tempIdGenerator = new CountingTempIdGenerator();
@@ -342,13 +348,18 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         // TODO create encounter?
 
         Bundle responseBundle = fhirPersistanceService.createUpdateFhirResourcesInFhirStore(fhirOperations);
+
+        if (useReferral) {
+            referralSetService.createSaveReferralSetsSamplePatientEntry(referralItems, updateData);
+        }
     }
 
     private Practitioner transformProviderToPractitioner(String providerId) {
         return transformProviderToPractitioner(providerService.get(providerId));
     }
 
-    private Practitioner transformProviderToPractitioner(Provider provider) {
+    @Override
+    public Practitioner transformProviderToPractitioner(Provider provider) {
         Practitioner practitioner = new Practitioner();
         practitioner.setId(provider.getFhirUuidAsString());
         practitioner.addName(new HumanName().setFamily(provider.getPerson().getLastName())
@@ -513,6 +524,12 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         Sample sample = analysis.getSampleItem().getSample();
         Patient patient = sampleHumanService.getPatientForSample(sample);
         Provider provider = sampleHumanService.getProviderForSample(sample);
+
+        Organization organization = sampleService.getOrganizationRequester(sample,
+                TableIdService.getInstance().REFERRING_ORG_TYPE_ID);
+        Organization organizationDepartment = sampleService.getOrganizationRequester(sample,
+                TableIdService.getInstance().REFERRING_ORG_DEPARTMENT_TYPE_ID);
+
         Test test = analysis.getTest();
         ServiceRequest serviceRequest = new ServiceRequest();
         serviceRequest.setId(analysis.getFhirUuidAsString());
@@ -520,6 +537,14 @@ public class FhirTransformServiceImpl implements FhirTransformService {
                 this.createIdentifier(fhirConfig.getOeFhirSystem() + "/analysis_uuid", analysis.getFhirUuidAsString()));
         serviceRequest.setRequisition(this.createIdentifier(fhirConfig.getOeFhirSystem() + "/samp_labNo",
                 analysis.getSampleItem().getSample().getAccessionNumber()));
+        if (organization != null) {
+            serviceRequest.addLocationReference(
+                    this.createReferenceFor(ResourceType.Location, organization.getFhirUuidAsString()));
+        }
+        if (organizationDepartment != null) {
+            serviceRequest.addLocationReference(
+                    this.createReferenceFor(ResourceType.Location, organizationDepartment.getFhirUuidAsString()));
+        }
 
         List<ElectronicOrder> eOrders = electronicOrderService.getElectronicOrdersByExternalId(sample.getReferringId());
 
@@ -547,7 +572,7 @@ public class FhirTransformServiceImpl implements FhirTransformService {
         }
         ObservationHistory program = observationHistoryService.getObservationHistoriesBySampleIdAndType(sample.getId(),
                 observationHistoryService.getObservationTypeIdForType(ObservationType.PROGRAM));
-        if (program != null) {
+        if (program != null && !GenericValidator.isBlankOrNull(program.getValue())) {
             serviceRequest.addCategory(transformSampleProgramToCodeableConcept(program));
         }
         serviceRequest.setPriority(ServiceRequestPriority.ROUTINE);
@@ -571,8 +596,20 @@ public class FhirTransformServiceImpl implements FhirTransformService {
 
     private CodeableConcept transformSampleProgramToCodeableConcept(ObservationHistory program) {
         CodeableConcept codeableConcept = new CodeableConcept();
-        codeableConcept.addCoding(
-                new Coding(fhirConfig.getOeFhirSystem() + "/sample_program", program.getValue(), program.getValue()));
+        String programDisplay = "";
+        String programCode = "";
+        if ("D".equals(program.getValueType())) {
+            Dictionary dictionary = dictionaryService.get(program.getValue());
+            if (dictionary != null) {
+                programCode = dictionary.getDictEntry();
+                programDisplay = dictionary.getDictEntry();
+            }
+        } else {
+            programCode = program.getValue();
+            programDisplay = program.getValue();
+        }
+        codeableConcept
+                .addCoding(new Coding(fhirConfig.getOeFhirSystem() + "/sample_program", programCode, programDisplay));
         return codeableConcept;
     }
 
@@ -852,13 +889,22 @@ public class FhirTransformServiceImpl implements FhirTransformService {
     @Override
     public Practitioner transformNameToPractitioner(String practitionerName) {
         Practitioner practitioner = new Practitioner();
-        String[] names = practitionerName.split(" ", 2);
         HumanName name = practitioner.addName();
-        if (names.length >= 1) {
-            name.addGiven(names[0]);
-        }
-        if (names.length >= 2) {
-            name.setFamily(names[1]);
+
+        if (practitionerName.contains(",")) {
+            String[] names = practitionerName.split(",", 2);
+            name.setFamily(names[0]);
+            for (int i = 1; i < names.length; ++i) {
+                name.addGiven(names[i]);
+            }
+        } else {
+            String[] names = practitionerName.split(" ");
+            if (names.length >= 1) {
+                name.setFamily(names[names.length - 1]);
+                for (int i = 0; i < names.length - 1; ++i) {
+                    name.addGiven(names[i]);
+                }
+            }
         }
         return practitioner;
     }

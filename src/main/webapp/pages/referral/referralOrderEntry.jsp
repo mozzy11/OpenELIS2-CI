@@ -45,8 +45,7 @@ jQuery(document).ready(function () {
 //     jQuery('.saveToggle').each(function() {
 //     	checkFinish(jQuery(this).val());
 //     });
-    
-   jQuery("#addTestTable").on("click", referralTestSelected);
+
 });
 
 function referralTestSelected(e) {
@@ -64,7 +63,8 @@ function referralTestSelected(e) {
 		}
 	});
 	jQuery('.deleteReferralRow').remove();
-}
+	setSave();
+	}
 
 function /*void*/ markModified(index) {
 	checkFinish(index);
@@ -196,14 +196,15 @@ function createReferralOption(sampleNum, testNum, testId, testName, index) {
 	referredTestSelect.setAttribute('name','referralItems[' + index + '].referredTestId');
 	referredTestSelect.setAttribute('id', 'testSelection_' + index);
 	referredTestSelect.setAttribute('onchange', 'markModified("' + index + '");');
-	option = document.createElement('option');
-	option.value = 0;
-	referredTestSelect.appendChild(option);
+// 	option = document.createElement('option');
+// 	option.value = 0;
+// 	referredTestSelect.appendChild(option);
 	option = document.createElement('option');
 	option.value = testId;
 	option.innerHTML = testName;
 	referredTestSelect.appendChild(option);
 	cell5.appendChild(referredTestSelect);
+	
 }
 
 </script>

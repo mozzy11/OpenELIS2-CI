@@ -205,10 +205,12 @@ public class SamplePatientEntryController extends BaseSampleEntryController {
         try {
             samplePatientService.persistData(updateData, patientUpdate, patientInfo, form, request);
             try {
-                fhirTransformService.transformPersistOrderEntryFhirObjects(updateData, patientInfo);
+                fhirTransformService.transformPersistOrderEntryFhirObjects(updateData, patientInfo,
+                        form.getUseReferral(), form.getReferralItems());
             } catch (FhirTransformationException | FhirPersistanceException e) {
                 LogEvent.logError(e);
             }
+
             // String fhir_json = fhirTransformService.CreateFhirFromOESample(updateData,
             // patientUpdate, patientInfo, form, request);
         } catch (LIMSRuntimeException e) {

@@ -245,8 +245,11 @@ public abstract class PatientReport extends Report {
                 findPatientInfo();
                 createReportItems();
             }
-
-            postSampleBuild();
+            if (reportItems.size() == 0) {
+                add1LineErrorMessage("report.error.message.noPrintableItems");
+            } else {
+                postSampleBuild();
+            }
         }
 
         if (!updatedAnalysis.isEmpty()) {
@@ -501,7 +504,11 @@ public abstract class PatientReport extends Report {
              * resultList.get( 0 ) ); setNormalRange( data, test, resultList.get( 0 ) ); }
              */
         } else if (!SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
-                AnalysisStatus.Finalized)) {
+                AnalysisStatus.Finalized)
+                && !(SpringContext.getBean(IStatusService.class).matches(analysisService.getStatusId(currentAnalysis),
+                        AnalysisStatus.TechnicalRejected)
+                        && ConfigurationProperties.getInstance().isPropertyValueEqual(
+                                ConfigurationProperties.Property.VALIDATE_REJECTED_TESTS, "false"))) {
             sampleCompleteMap.put(sampleService.getAccessionNumber(currentSample), Boolean.FALSE);
             setEmptyResult(data);
         } else {

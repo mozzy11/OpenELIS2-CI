@@ -796,6 +796,7 @@
         jQuery("#activeRO").text(jQuery("#active").attr("checked") ? "Y" : "N");
         jQuery("#orderableRO").text(jQuery("#orderable").attr("checked") ? "Y" : "N");
         jQuery("#notifyResultsRO").text(jQuery("#notifyResults").attr("checked") ? "Y" : "N");
+        jQuery("#inLabOnlyRO").text(jQuery("#inLabOnly").attr("checked") ? "Y" : "N");
     }
 
     function createJSON() {
@@ -812,6 +813,7 @@
         jsonObj.resultType = jQuery("#resultTypeSelection").val();
         jsonObj.orderable = jQuery("#orderable").attr("checked") ? 'Y' : 'N';
         jsonObj.notifyResults = jQuery("#notifyResults").attr("checked") ? 'Y' : 'N';
+        jsonObj.inLabOnly = jQuery("#inLabOnly").attr("checked") ? 'Y' : 'N';
         jsonObj.active = jQuery("#active").attr("checked") ? 'Y' : 'N';
         jsonObj.sampleTypes = [];
         addJsonSortingOrder(jsonObj);
@@ -874,7 +876,7 @@
 
             upperAge = jQuery("#upperAgeSetter_" + rowIndex).val();
             if (upperAge != "Infinity") {
-                limit.highAgeRange = yearMonth == "<%=MessageUtil.getContextualMessage("abbreviation.year.single")%>" ? (upperAge * 12).toString() : upperAge;
+                limit.highAgeRange = yearMonth == '<%=MessageUtil.getMessage("abbreviation.day.single")%>' ? upperAge : yearMonth == '<%=MessageUtil.getMessage("abbreviation.month.single")%>' ? Math.floor(upperAge * 365/12).toString() : (365 * upperAge).toString();
             } else {
                 limit.highAgeRange = upperAge;
             }
@@ -1127,7 +1129,9 @@ td {
                     <label for="orderable"><spring:message code="label.orderable"/></label>
                     <input type="checkbox" id="orderable" checked="checked"/><br/>
                     <label for="notifyResults"> <spring:message code="test.notifyResults" /></label>
-                    <input type="checkbox" id='notifyResults'/>
+                    <input type="checkbox" id='notifyResults'/><br/>
+                    <label for="inLabOnly"> <spring:message code="test.inLabOnly" /></label>
+                    <input type="checkbox" id='inLabOnly'/><br/>
                 </td>
             </tr>
         </table>
@@ -1164,6 +1168,9 @@ td {
             <br/>
             <spring:message code="test.notifyResults"/>
             <div class="tab" id="notifyResultsRO"></div>
+            <br/>
+            <spring:message code="test.inLabOnly"/>
+            <div class="tab" id="inLabOnlyRO"></div>
             <br/>
         </div>
         <div class="step2" style="float:right;  width:80%; display: none">

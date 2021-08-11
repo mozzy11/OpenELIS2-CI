@@ -163,8 +163,9 @@
 				panelOption.forEach(function(elem) {
 					jQuery(elem).attr("selected", true)
 				});
-				
+
 				jQuery("#notifyResults").prop('checked', jQuery(elem).attr('fNotifyResults') === 'true');
+				jQuery("#inLabOnly").prop('checked', jQuery(elem).attr('fInLabOnly') === 'true');
 				
 				jQuery("#panelSelection").change();
 							
@@ -1302,6 +1303,7 @@
         jQuery("#activeRO").text(jQuery("#active").attr("checked") ? "Y" : "N");
         jQuery("#orderableRO").text(jQuery("#orderable").attr("checked") ? "Y" : "N");
         jQuery("#notifyResultsRO").text(jQuery("#notifyResults").attr("checked") ? "Y" : "N");
+        jQuery("#inLabOnlyRO").text(jQuery("#inLabOnly").attr("checked") ? "Y" : "N");
     }
 
     function createJSON() {
@@ -1319,6 +1321,7 @@
         jsonObj.resultType = jQuery("#resultTypeSelection").val();
         jsonObj.orderable = jQuery("#orderable").attr("checked") ? 'Y' : 'N';
         jsonObj.notifyResults = jQuery("#notifyResults").attr("checked") ? 'Y' : 'N';
+        jsonObj.inLabOnly = jQuery("#inLabOnly").attr("checked") ? 'Y' : 'N';
         jsonObj.active = jQuery("#active").attr("checked") ? 'Y' : 'N';
         
         jQuery(".resultClass").each(function (i,elem) {
@@ -1438,13 +1441,13 @@
         for (var rowIndex = 0; rowIndex < defaultResultLimits.length; rowIndex++) {
             
             //yearMonth = monthYear = jQuery(".yearMonthSelect_" + rowIndex + ":checked").val();
-            yearMonth = 'M'; // always month regardless
+            yearMonth = 'D'; // always month regardless
             limit = {};
 
             upperAge = defaultResultLimits[rowIndex][1][1];
             if (upperAge != "Infinity") {
                 //limit.highAgeRange = yearMonth == "<%=MessageUtil.getContextualMessage("abbreviation.year.single")%>" ? (upperAge * 12).toString() : upperAge;
-            	limit.highAgeRange = upperAge;
+            	 limit.highAgeRange = yearMonth == '<%=MessageUtil.getMessage("abbreviation.day.single")%>' ? upperAge : yearMonth == '<%=MessageUtil.getMessage("abbreviation.month.single")%>' ? Math.floor(upperAge * 365/12) : 365 * upperAge;
             } else {
                 limit.highAgeRange = "Infinity";
             }
@@ -1488,7 +1491,8 @@
 
             upperAge = jQuery("#upperAgeSetter_" + rowIndex).val();
             if (upperAge != "Infinity") {
-                limit.highAgeRange = yearMonth == "<%=MessageUtil.getContextualMessage("abbreviation.year.single")%>" ? (upperAge * 12).toString() : upperAge;
+<%--                 limit.highAgeRange = yearMonth == "<%=MessageUtil.getContextualMessage("abbreviation.year.single")%>" ? (upperAge * 365).toString() : upperAge; --%>
+                limit.highAgeRange = yearMonth == '<%=MessageUtil.getMessage("abbreviation.day.single")%>' ? upperAge : yearMonth == '<%=MessageUtil.getMessage("abbreviation.month.single")%>' ? Math.floor(upperAge * 365/12).toString() : (365 * upperAge).toString();
             } else {
                 limit.highAgeRange = upperAge;
             }
@@ -1645,6 +1649,7 @@ td {
 					fReferenceValue='<%=bean.getReferenceValue()%>'
 					fReferenceId='<%=bean.getReferenceId()%>'
 					fNotifyResults='<%=bean.getNotifyResults()%>'
+					fInLabOnly='<%=bean.getInLabOnly()%>'
 				class='resultClass'>
 				
 				<tr>
@@ -1686,6 +1691,7 @@ td {
 					<td><b><%=bean.getActive()%></b></td>
 					<td><b><%=bean.getOrderable()%></b></td>
 					<%if (bean.getNotifyResults()) { %><td><b><spring:message code="test.notifyResults"/></b></td><%} %>
+					<%if (bean.getInLabOnly()) { %><td><b><spring:message code="test.inLabOnly"/></b></td><%} %>
 				</tr>
 				<tr>
 					<td><span class="catalog-label"><spring:message code="label.test.unit" /></span> <b><%=bean.getTestUnit()%></b></td>
@@ -1723,9 +1729,11 @@ td {
 					<%
 						}
 								}
+							%>
+				</tr>
+					<%
 							}
 					%>
-				</tr>
 
 				<%
 					if (bean.isHasLimitValues()) {
@@ -1736,7 +1744,7 @@ td {
 				</tr>
 				<tr>
 					<td><span class="catalog-label"><spring:message code="label.sex" /></span></td>
-					<td><span class="catalog-label"><spring:message code="configuration.test.catalog.age.range.days" /></span></td>
+					<td><span class="catalog-label"><spring:message code="configuration.test.catalog.age.range" /></span></td>
 					<td><span class="catalog-label"><spring:message code="configuration.test.catalog.normal.range" /></span></td>
 					<td><span class="catalog-label"><spring:message code="configuration.test.catalog.valid.range" /></span></td>
 				</tr>
@@ -1757,8 +1765,10 @@ td {
 				<%
 					}
 					%>
+					<tr><td>
 					<%--<input id="fLimit" type="hidden" value='<%=fLimitString%>' />  --%>
 					<input id="fLimit" type="hidden" value='<%=fLimitString%>' />
+					</td></tr>
 					<%
 						}
 					}
@@ -1946,7 +1956,10 @@ td {
 				<label for="orderable"><spring:message code="label.orderable" /></label>
 				<input type="checkbox" id="orderable" checked="checked" /><br/>
 				<label for="notifyResults"><spring:message code="test.notifyResults" /></label>
-				<input type="checkbox" id="notifyResults"/></td>
+				<input type="checkbox" id="notifyResults"/><br/>
+				<label for="inLabOnly"><spring:message code="test.inLabOnly" /></label>
+				<input type="checkbox" id="inLabOnly"/>
+				</td>
 			</tr>
 		</table>
 	</div>
@@ -1992,6 +2005,9 @@ td {
 			<br />
 			<spring:message code="test.notifyResults" />
 			<div class="tab" id="notifyResultsRO"></div>
+			<br />
+			<spring:message code="test.inLabOnly" />
+			<div class="tab" id="inLabOnlyRO"></div>
 			<br />
 		</div>
 		<div class="step2" style="float: right; width: 80%; display: none">
