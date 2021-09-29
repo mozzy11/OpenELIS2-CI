@@ -1,3 +1,4 @@
+name: publish event
 on:
  workflow_dispatch:
 jobs:
