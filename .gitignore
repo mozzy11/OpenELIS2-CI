@@ -2,7 +2,7 @@
 *.class
 
 # Package Files #
-*.war
+OpenELIS-Global.war
 *.ear
 
 #local use files
