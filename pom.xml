@@ -15,9 +15,9 @@
 		<maven.java.release>11</maven.java.release>
 
 		<major.version>2</major.version>
-		<minor.version>4</minor.version>
-		<state.version>2</state.version><!-- 0 = alpha, 1 = beta, 2 = rc, 3 = deployable -->
-		<fix.version>1</fix.version>
+		<minor.version>6</minor.version>
+		<state.version>1</state.version><!-- 0 = alpha, 1 = beta, 2 = rc, 3 = deployable -->
+		<fix.version>24</fix.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -26,16 +26,23 @@
 		<apachetiles.version>3.0.8</apachetiles.version>
 		<castor.version>1.4.1</castor.version>
 		<hapi.version>2.3</hapi.version>
-		<hibernate.version>5.4.3.Final</hibernate.version>
+		<hibernate.version>5.4.24.Final</hibernate.version>
 		<hibernate-validator.version>6.1.5.Final</hibernate-validator.version>
-		<log4j.version>2.13.3</log4j.version>
-		<postgresql.version>42.2.9</postgresql.version>
-		<springframework.version>5.2.4.RELEASE</springframework.version>
+		<postgresql.version>42.3.3</postgresql.version>
+		<log4j.version>2.17.1</log4j.version>
+		<springframework.version>5.3.18</springframework.version>
 		<springsecurity.version>5.2.10.RELEASE</springsecurity.version>
 		<testContainersVersion>1.15.3</testContainersVersion>
 	</properties>
 
 	<dependencies>
+	<!-- https://mvnrepository.com/artifact/org.jruby/jruby-complete -->
+<dependency>
+    <groupId>org.jruby</groupId>
+    <artifactId>jruby-complete</artifactId>
+    <version>9.3.3.0</version>
+</dependency>
+
 		<dependency>
 			<groupId>org.jsmpp</groupId>
 			<artifactId>jsmpp</artifactId>
@@ -44,7 +51,7 @@
 		<dependency>
 			<groupId>org.itech</groupId>
 			<artifactId>dataexport-api</artifactId>
-			<version>0.0.0.4</version>
+			<version>0.0.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>ca.uhn.hapi.fhir</groupId>
@@ -65,7 +72,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.12.0</version>
+			<version>2.12.6.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -78,6 +85,11 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.13</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>3.17</version>
 		</dependency>
 		<!-- APACHE COMMONS DEPENDENCIES -->
 		<dependency>
@@ -236,7 +248,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>3.8.5</version>
+			<version>4.8.0</version>
 			<!-- remove logback so our logging continues under log4j2 -->
 			<exclusions>
 				<exclusion>
@@ -340,17 +352,17 @@
 			<version>${springframework.version}</version>
 		</dependency>
 		<dependency>
-         	<groupId>org.mockito</groupId>
-         	<artifactId>mockito-core</artifactId>
-			 <scope>test</scope>
-        	<version>2.21.0</version>
-       	</dependency>	
-	    <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${testContainersVersion}</version>
-            <scope>test</scope>
-       </dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+			<version>2.21.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>${testContainersVersion}</version>
+			<scope>test</scope>
+		</dependency>
 		<!-- ASSORTED DEPENDENCIES (Sorted by artifactId) -->
 		<dependency>
 			<groupId>org.ajaxtags</groupId>
@@ -442,7 +454,7 @@
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
-			<version>1.12.1</version>
+			<version>1.14.2</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
@@ -477,7 +489,7 @@
 			<id>jaspersoft-third-party</id>
 			<url>https://jaspersoft.jfrog.io/jaspersoft/third-party-ce-artifacts/</url>
 		</repository>
-	</repositories>	
+	</repositories>
 	<build>
 		<finalName>OpenELIS-Global</finalName>
 		<resources>

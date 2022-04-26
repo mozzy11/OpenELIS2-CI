@@ -27,10 +27,28 @@ function makeDirty() {
     window.onbeforeunload = formWarning;
 }
 
-function search(searchType) {
-	jQuery('#searchType').val(searchType);
-	jQuery('#mainForm').attr('method', 'GET');
-	jQuery('#mainForm').submit();
+function searchByIdentifier() {
+	const params = new URLSearchParams({
+		searchType: "IDENTIFIER",
+		searchValue: jQuery('#searchValue').val(),
+		useAllInfo: jQuery('#allInfo1').is(':checked'),
+		});
+	
+	window.location.href = "ElectronicOrders?" + params.toString();
+
+}
+
+function searchByDateAndStatus() {
+	const params = new URLSearchParams({
+		searchType: "DATE_STATUS",
+		startDate: jQuery('#startDate').val(),
+		endDate: jQuery('#endDate').val(),
+		statusId: jQuery('#statusId').val(),
+		useAllInfo: jQuery('#allInfo2').is(':checked'),
+		});
+	
+	window.location.href = "ElectronicOrders?" + params.toString();
+
 }
 
 function sort(col) {
@@ -91,7 +109,7 @@ function saveEntry(index) {
 	restoreRow(index);
 	markRowOutOfSync(index);
 	
-	window.open('SamplePatientEntry.do?ID=' + externalOrderId + '&labNumber=' + labNumber + '&attemptAutoSave=true', "_blank");
+	window.open('SamplePatientEntry?ID=' + externalOrderId + '&labNumber=' + labNumber + '&attemptAutoSave=true', "_blank");
 }
 
 function markRowOutOfSync(index) {
@@ -124,7 +142,7 @@ function processScanSuccess(xhr, index) {
 
 function editOrder(index) {
 	var externalOrderId = jQuery('#externalOrderId_' + index).val();
-	location.href='SamplePatientEntry.do?ID=' + externalOrderId;
+	location.href='SamplePatientEntry?ID=' + externalOrderId;
 }
 
 jQuery(document).ready( function() {
@@ -138,8 +156,9 @@ Search for Test Requests
 <br>
 Search by family name, national ID number, lab number from referring lab, or passport number
 <br>
-<form:input path="searchValue" /> 
-<button type="button" onclick="search('IDENTIFIER')"><spring:message code="label.button.search" /></button>
+<form:input path="searchValue" id="searchValue" /> 
+<button type="button" onclick="searchByIdentifier()"><spring:message code="label.button.search" /></button>
+<form:checkbox path="useAllInfo" id="allInfo1" value="true"/> <spring:message code="label.eorder.allinfo" text="get all info" />
 <hr>
 Test Requests by Date, and Status
 Enter the date range for test requests. This will search by the date of the referral, or the order date of the electronic request
@@ -155,7 +174,9 @@ Status
 <form:options items="${form.statusSelectionList}" itemLabel="value" itemValue="id"/>
 </form:select>
 <br>
-<button type="button" onclick="search('DATE_STATUS')"><spring:message code="label.button.search" /></button>
+<button type="button" onclick="searchByDateAndStatus()"><spring:message code="label.button.search" /></button>
+<form:checkbox path="useAllInfo" id="allInfo2" value="true" /> <spring:message code="label.eorder.allinfo" text="get all info" />
+<br>
 
 <c:if test="${empty form.eOrders && form.searchFinished}">
     <h2><spring:message code="referral.noreferralDisplayItem"/></h2>

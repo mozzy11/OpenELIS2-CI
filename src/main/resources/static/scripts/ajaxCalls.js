@@ -66,13 +66,13 @@ function getSampleForLabOrderOrPatient( orderNumber, patientPK, success, failure
 
 //sensitive data is being transmitted, therefore a token check should be done even on GET. 
 //Otherwise this should be moved to a POST request and rely on regular csrf functionality
-function getSampleForLabOrderOrPatientWithTest( orderNumber, patientPK, testId, unvalidatedTestOnly, success, failure, additionalSuccessParams){
+function getSampleForLabOrderOrPatientWithTestLOINC( orderNumber, patientPK, loinc, unvalidatedTestOnly, success, failure, additionalSuccessParams){
 	if( !failure ){	failure = defaultFailure;}
 	
 	new Ajax.Request('ajaxQueryXML',
 			{
 				method : 'get', 
-				parameters : "provider=SampleSearchPopulateProvider&unvalidatedTestOnly=" + unvalidatedTestOnly + "&testId=" + testId + "&patientKey=" + patientPK + "&accessionNo=" + orderNumber ,
+				parameters : "provider=SampleSearchPopulateProvider&unvalidatedTestOnly=" + unvalidatedTestOnly + "&loinc=" + loinc + "&patientKey=" + patientPK + "&accessionNo=" + orderNumber ,
 			    //indicator: 'throbbing',
 				requestHeaders : {
 					"X-CSRF-Token" : getCsrfToken()
@@ -112,6 +112,22 @@ function getTestEntities( testId, success, failure){
         {
             method : 'get',
             parameters : "provider=TestEntitiesProvider&testId=" + testId ,
+            //indicator: 'throbbing',
+			requestHeaders : {
+				"X-CSRF-Token" : getCsrfToken()
+			},
+            onSuccess : success,
+            onFailure : failure
+        });
+}
+
+function getTestResultLimits(testId, success, failure){
+	if( !failure ){	failure = defaultFailure;}
+
+    new Ajax.Request('ajaxQueryXML',
+        {
+            method : 'get',
+            parameters : "provider=TestResultLimitsProvider&testId=" + testId ,
             //indicator: 'throbbing',
 			requestHeaders : {
 				"X-CSRF-Token" : getCsrfToken()
@@ -499,7 +515,7 @@ function getPendingAnalysisForTest( testId, success, failure){
 function postBatchSample(success, failure){
     if( !failure){failure = defaultFailure;	}
 	new Ajax.Request(
-		'SamplePatientEntryBatch.do',  //url
+		'SamplePatientEntryBatch',  //url
 		{//options
 			method: 'POST', //http method
 			parameters: jQuery(document.getElementById("mainForm")).serialize().replace(/\+/g,'%20'),

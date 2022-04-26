@@ -23,6 +23,7 @@ import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.samplehuman.service.SampleHumanService;
 import org.openelisglobal.spring.util.SpringContext;
+import org.openelisglobal.systemuser.service.UserService;
 import org.openelisglobal.userrole.service.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,6 +37,7 @@ import org.springframework.web.servlet.ModelAndView;
 public class AccessionValidationController extends BaseController {
 
     private final String RESULT_EDIT_ROLE_ID;
+    private static final String ROLE_VALIDATION = "Validation";
 
     private InventoryUtility inventoryUtility = SpringContext.getBean(InventoryUtility.class);
     @Autowired
@@ -44,6 +46,8 @@ public class AccessionValidationController extends BaseController {
     private SampleHumanService sampleHumanService;
     @Autowired
     private UserRoleService userRoleService;
+    @Autowired
+    private UserService userService;
 
     public AccessionValidationController(RoleService roleService) {
         Role editRole = roleService.getRoleByName("Results modifier");
@@ -100,7 +104,8 @@ public class AccessionValidationController extends BaseController {
                     resultsUtility.addIdentifingPatientInfo(patient, form);
 
                     List<AnalysisItem> resultsAnalysises = resultsUtility.getValidationAnalysisBySample(sample);
-                    count = resultsAnalysises.size();
+                    List<AnalysisItem> filteredresultList = userService.filterAnalystResultsByLabUnitRoles(getSysUserId(request), resultsAnalysises, ROLE_VALIDATION);
+                    count = filteredresultList.size();
 //                    if (resultsUtility.inventoryNeeded()) {
 //                        addInventory(form);
 //                        form.setDisplayTestKit(true);
@@ -108,7 +113,7 @@ public class AccessionValidationController extends BaseController {
 //                        addEmptyInventoryList(form, accessionNumber);
 //                    }
 
-                    paging.setDatabaseResults(request, form, resultsAnalysises);
+                    paging.setDatabaseResults(request, form, filteredresultList);
                 } else {
                     setEmptyResults(form, accessionNumber);
                 }

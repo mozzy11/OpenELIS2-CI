@@ -50,7 +50,7 @@ public class ModuleAuthenticationInterceptor extends HandlerInterceptorAdapter {
             LogEvent.logInfo("ModuleAuthenticationInterceptor", "preHandle()",
                     "======> NOT ALLOWED ACCESS TO THIS MODULE");
             LogEvent.logInfo(this.getClass().getName(), "method unkown", "has no permission"); //
-            redirectStrategy.sendRedirect(request, response, "/Home.do?access=denied");
+            redirectStrategy.sendRedirect(request, response, "/Home?access=denied");
             return false;
         }
 
@@ -70,9 +70,13 @@ public class ModuleAuthenticationInterceptor extends HandlerInterceptorAdapter {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private boolean hasPermissionForUrl(HttpServletRequest request, boolean useParameters) {
-        @SuppressWarnings("rawtypes")
-        HashSet accessMap = (HashSet) request.getSession().getAttribute(IActionConstants.PERMITTED_ACTIONS_MAP);
+        HashSet<String> accessMap = (HashSet<String>) request.getSession()
+                .getAttribute(IActionConstants.PERMITTED_ACTIONS_MAP);
+        if (accessMap == null) {
+            accessMap = (HashSet<String>) request.getAttribute(IActionConstants.PERMITTED_ACTIONS_MAP);
+        }
         List<SystemModuleUrl> sysModsByUrl = systemModuleUrlService.getByRequest(request);
 
         if (useParameters) {

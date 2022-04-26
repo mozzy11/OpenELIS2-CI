@@ -554,6 +554,41 @@
             }
         });
     }
+
+    function reportingRangeCheck() {
+        var highReportingRangeValue, lowReportingRangeValue;
+        var lowReportingRange = jQuery("#lowReportingRange");
+        var highReportingRange = jQuery("#highReportingRange");
+        lowReportingRange.removeClass("error");
+        lowReportingRangeValue = +lowReportingRange.val();
+        if (lowReportingRangeValue != "-Infinity" &&
+                lowReportingRangeValue != lowReportingRange.val()) {
+            lowReportingRange.addClass("error");
+            alert("<%=MessageUtil.getContextualMessage("error.out.side.range")%>");
+            return;
+        }
+        highReportingRange.removeClass("error");
+        highReportingRangeValue = +highReportingRange.val();
+        if (highReportingRangeValue != "Infinity" &&
+                highReportingRangeValue != highReportingRange.val()) {
+            highReportingRange.addClass("error");
+            alert("<%=MessageUtil.getContextualMessage("error.out.side.range")%>");
+            return;
+        }
+        if (lowReportingRangeValue != "-Infinity" && highReportingRangeValue != "Infinity" &&
+                lowReportingRangeValue >= highReportingRangeValue) {
+            highReportingRange.addClass("error");
+            lowReportingRange.addClass("error");
+            alert("<%=MessageUtil.getContextualMessage("error.out.side.range")%>");
+            return;
+        }
+        jQuery(".rowKey").each(function () {
+            //index is in the template
+            if (jQuery(this).val() != "index") {
+                normalRangeCheck(jQuery(this).val());
+            }
+        });
+    }
     function checkReadyForNextStep() {
         var ready = true;
         if (step == "step1") {
@@ -655,7 +690,7 @@
         jQuery(".confirmShow").hide();
         jQuery(".selectShow").show();
         if (step == 'step1') {
-            submitAction('TestManagementConfigMenu.do');
+            submitAction('TestManagementConfigMenu');
         } else if (step == 'step2') {
             goBackToStep1();
         } else if ( step == 'step3Dictionary' || step == 'step3Numeric' ){
@@ -792,6 +827,7 @@
         jQuery("#panelRO").append(panelNames);
         jQuery("#uomRO").empty();
         jQuery("#uomRO").append(jQuery("#uomSelection  option:selected").text());
+        jQuery("#loincRO").text(jQuery("#loinc").val());
         jQuery("#resultTypeRO").text(jQuery("#resultTypeSelection  option:selected").text());
         jQuery("#activeRO").text(jQuery("#active").attr("checked") ? "Y" : "N");
         jQuery("#orderableRO").text(jQuery("#orderable").attr("checked") ? "Y" : "N");
@@ -810,6 +846,7 @@
         addJsonPanels(jsonObj);
         jQuery("#panelSelection").val();
         jsonObj.uom = jQuery("#uomSelection").val();
+        jsonObj.loinc = jQuery("#loinc").val();
         jsonObj.resultType = jQuery("#resultTypeSelection").val();
         jsonObj.orderable = jQuery("#orderable").attr("checked") ? 'Y' : 'N';
         jsonObj.notifyResults = jQuery("#notifyResults").attr("checked") ? 'Y' : 'N';
@@ -953,10 +990,10 @@ td {
     <form:hidden id="jsonWad" name='${form.formName}' path="jsonWad"/>
 
     <input type="button" value="<%= MessageUtil.getContextualMessage("banner.menu.administration") %>"
-           onclick="submitAction('MasterListsPage.do');"
+           onclick="submitAction('MasterListsPage');"
            class="textButton"/> &rarr;
     <input type="button" value="<%= MessageUtil.getContextualMessage("configuration.test.management") %>"
-           onclick="submitAction('TestManagementConfigMenu.do');"
+           onclick="submitAction('TestManagementConfigMenu');"
            class="textButton"/>&rarr;
     <span class="step1">
             <spring:message code="configuration.test.add"/>
@@ -1123,7 +1160,15 @@ td {
                         <option value='<%=pair.getId()%>'><%=pair.getValue()%>
                         </option>
                         <% } %>
-                    </select><br/><br/><br/><br/><br/>
+                    </select> 
+                    <br /> 
+                    <br/>
+                    <br/>
+                    <spring:message code="label.loinc" /><br />
+					<form:input path="loinc" type="text" id="loinc"
+					onchange="checkReadyForNextStep()" />
+					<br/>
+                    <br/><br/>
                     <label for="orderable"><spring:message code="test.isActive"/></label>
                     <input type="checkbox" id="active" checked="checked"/><br/>
                     <label for="orderable"><spring:message code="label.orderable"/></label>
@@ -1157,6 +1202,11 @@ td {
             <spring:message code="label.unitofmeasure"/>
             <div class="tab" id="uomRO"><spring:message code="label.none"/></div>
             <br/>
+            <spring:message code="label.loinc" />
+			<div class="tab" id="loincRO">
+				<spring:message code="label.none" />
+			</div>
+			<br />
             <spring:message code="result.resultType"/>
             <div class="tab" id="resultTypeRO"></div>
             <br/>
@@ -1349,7 +1399,7 @@ td {
                 <td><span class="sexRange" style="display: none"><spring:message code="label.sex" /> </span></td>
                 <td colspan="4" align="center"><spring:message code="label.age.range" /> </td>
                 <td colspan="2" align="center"><spring:message code="label.range" /></td>
-                <td align="center"><spring:message code="label.reporting.range" /></td>
+                <td colspan="2" align="center"><spring:message code="label.reporting.range" /></td>
                 <td colspan="2"></td>
             </tr>
             <tr class="row_0">
@@ -1383,7 +1433,9 @@ td {
                            onchange="normalRangeCheck('0');"></td>
                 <td><input type="text" value="Infinity" size="10" id="highNormal_0" class="highNormal"
                            onchange="normalRangeCheck('0');"></td>
-                <td><input type="text" value="" size="12" id="reportingRange_0"></td>
+                <td><input type="text" value="-Infinity" size="10" id="lowReportingRange" onchange="reportingRangeCheck();"></td>
+                <td><input type="text" value="Infinity" size="10" id="highReportingRange" onchange="reportingRangeCheck();"></td>
+
                 <td><input type="text" value="-Infinity" size="10" id="lowValid" onchange="validRangeCheck();"></td>
                 <td><input type="text" value="Infinity" size="10" id="highValid" onchange="validRangeCheck();"></td>
             </tr>
@@ -1420,7 +1472,7 @@ td {
     <div class="confirmShow" style="margin-left:auto; margin-right:auto;width: 40%; display: none">
         <input type="button"
                value="<%= MessageUtil.getContextualMessage("label.button.accept") %>"
-               onclick="submitAction('TestAdd.do');"/>
+               onclick="submitAction('TestAdd');"/>
         <input type="button" value="<%=MessageUtil.getContextualMessage("label.button.back")%>"
                onclick="navigateBackFromConfirm()"/>
     </div>

@@ -2,6 +2,7 @@ package org.openelisglobal.sample.service;
 
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -114,6 +115,9 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
     @Override
     @Transactional(readOnly = true)
     public Sample getSampleByAccessionNumber(String labNumber) {
+        if (labNumber != null && labNumber.contains(".")) {
+            labNumber = labNumber.substring(0, labNumber.indexOf('.'));
+        }
         return getMatch("accessionNumber", labNumber).orElse(null);
     }
 
@@ -402,6 +406,12 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
     @Transactional(readOnly = true)
     public List<Sample> getSamplesByProjectAndStatusIDAndAccessionRange(List<Integer> inclusiveProjectIdList,
             List<Integer> inclusiveStatusIdList, String minAccession, String maxAccession) {
+        if (minAccession != null && minAccession.contains(".")) {
+            minAccession = minAccession.substring(0, minAccession.indexOf('.'));
+        }
+        if (maxAccession != null && maxAccession.contains(".")) {
+            maxAccession = maxAccession.substring(0, maxAccession.indexOf('.'));
+        }
         return getBaseObjectDAO().getSamplesByProjectAndStatusIDAndAccessionRange(inclusiveProjectIdList,
                 inclusiveStatusIdList, minAccession, maxAccession);
     }
@@ -410,6 +420,12 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
     @Transactional(readOnly = true)
     public List<Sample> getSamplesByProjectAndStatusIDAndAccessionRange(String projectId,
             List<Integer> inclusiveStatusIdList, String minAccession, String maxAccession) {
+        if (minAccession != null && minAccession.contains(".")) {
+            minAccession = minAccession.substring(0, minAccession.indexOf('.'));
+        }
+        if (maxAccession != null && maxAccession.contains(".")) {
+            maxAccession = maxAccession.substring(0, maxAccession.indexOf('.'));
+        }
         return getBaseObjectDAO().getSamplesByProjectAndStatusIDAndAccessionRange(projectId, inclusiveStatusIdList,
                 minAccession, maxAccession);
     }
@@ -473,12 +489,22 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
     @Override
     @Transactional(readOnly = true)
     public List<Sample> getSamplesByAccessionRange(String minAccession, String maxAccession) {
+        if (minAccession != null && minAccession.contains(".")) {
+            minAccession = minAccession.substring(0, minAccession.indexOf('.'));
+        }
+        if (maxAccession != null && maxAccession.contains(".")) {
+            maxAccession = maxAccession.substring(0, maxAccession.indexOf('.'));
+        }
         return getBaseObjectDAO().getSamplesByAccessionRange(minAccession, maxAccession);
     }
 
     @Override
     @Transactional(readOnly = true)
     public void getSampleByAccessionNumber(Sample sample) {
+        if (sample.getAccessionNumber() != null && sample.getAccessionNumber().contains(".")) {
+            sample.setAccessionNumber(
+                    sample.getAccessionNumber().substring(0, sample.getAccessionNumber().indexOf('.')));
+        }
         getBaseObjectDAO().getSampleByAccessionNumber(sample);
 
     }
@@ -533,6 +559,17 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
 
     @Override
     @Transactional(readOnly = true)
+    public boolean sampleContainsTestWithLoinc(String sampleId, String loinc) {
+        for (Analysis curAnalysis : analysisService.getAnalysesBySampleId(sampleId)) {
+            if (curAnalysis.getTest().getLoinc().equals(loinc)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Sample> getAllMissingFhirUuid() {
         return sampleDAO.getAllMissingFhirUuid();
     }
@@ -540,6 +577,12 @@ public class SampleServiceImpl extends BaseObjectServiceImpl<Sample, String> imp
     @Override
     public List<Sample> getSamplesByAnalysisIds(List<String> analysisIds) {
         return sampleDAO.getSamplesByAnalysisIds(analysisIds);
+    }
+
+    @Override
+    public List<Sample> getSamplesForSiteBetweenOrderDates(String referringSiteId, LocalDate lowerDate,
+            LocalDate upperDate) {
+        return sampleDAO.getSamplesForSiteBetweenOrderDates(referringSiteId, lowerDate, upperDate);
     }
 
 }

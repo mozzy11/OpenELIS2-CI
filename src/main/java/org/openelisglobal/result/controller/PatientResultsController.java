@@ -3,6 +3,7 @@ package org.openelisglobal.result.controller;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,6 +24,7 @@ import org.openelisglobal.result.action.util.ResultsLoadUtility;
 import org.openelisglobal.result.action.util.ResultsPaging;
 import org.openelisglobal.result.form.PatientResultsForm;
 import org.openelisglobal.spring.util.SpringContext;
+import org.openelisglobal.systemuser.service.UserService;
 import org.openelisglobal.test.beanItems.TestResultItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -39,6 +41,9 @@ public class PatientResultsController extends BaseController {
 
     @Autowired
     PatientService patientService;
+    @Autowired
+    private UserService userService;
+    private static final String ROLE_RESULTS = "Results";
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -86,7 +91,8 @@ public class PatientResultsController extends BaseController {
 
                 List<TestResultItem> results = resultsUtility.getGroupedTestsForPatient(patient);
 
-                form.setTestResult(results);
+                List<TestResultItem> filteredResults = userService.filterResultsByLabUnitRoles(getSysUserId(request), results ,ROLE_RESULTS);
+                form.setTestResult(filteredResults);
 
                 // move this out of results utility
                 resultsUtility.addIdentifingPatientInfo(patient, form);
@@ -98,7 +104,7 @@ public class PatientResultsController extends BaseController {
                     addEmptyInventoryList(form);
                 }
 
-                paging.setDatabaseResults(request, form, results);
+                paging.setDatabaseResults(request, form, filteredResults);
 
             } else {
                 form.setTestResult(new ArrayList<TestResultItem>());

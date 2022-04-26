@@ -29,6 +29,12 @@ jQuery(document).ready( function() {
 
 function search(searchType) {
 	jQuery('#searchType').val(searchType);
+	
+	if (searchType == 'TEST_AND_DATES' && !jQuery('#startDate').val() && !jQuery('#endDate').val()) {
+			alert('a date range must be specified');
+			return;
+	}
+	
 	jQuery('#mainForm').attr('method', 'GET');
 	jQuery('#mainForm').submit();
 }
@@ -65,7 +71,7 @@ function printPatientReports() {
 	jQuery("#mainForm input[name=analysisIds]:checked").each(function () {
 		analysisIds.push(this.value);
 	});
-	window.open('ReportPrint.do?report=patientCILNSP_vreduit&type=patient&analysisIds=' + analysisIds); 
+	window.open('ReportPrint?report=patientCILNSP_vreduit&type=patient&analysisIds=' + analysisIds); 
 }
 
 </script>

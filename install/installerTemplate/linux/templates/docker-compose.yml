@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.6'
 # lines starting with a #db and #port will be uncommented when setup with a docker database
 services:
 #db    db.openelis.org:
@@ -7,7 +7,7 @@ services:
 #db        ports:
 #db            - "[% db_host_port %]:5432"
 #db        networks:
-#db            - default
+#db            - openelis-network
 #db        restart: always
 #db        env_file:
 #db            - [% db_env_dir %]database.env
@@ -19,12 +19,18 @@ services:
 #db              # files here will run on install
 #db            - [% db_init_dir %]:/docker-entrypoint-initdb.d    
 #db              # values must match values in DatabaseBackup.pl
-#db            - [% db_backups_dir %]:[% docker_backups_dir %]   
+#db            - [% db_backups_dir %]:[% docker_backups_dir %] 
+#db        logging:
+#db            driver: "local"
+#db            options:
+#db              max-size: "20m"
+#db              max-file: "50"
 #db        healthcheck:
-#db            test: [ "CMD", "pg_isready", "-q", "-d", "clinlims", "-U", "clinlims" ]
+#db            test: [ "CMD", "pg_isready" ]
 #db            timeout: 45s
 #db            interval: 10s
 #db            retries: 10 
+#db            start_period: 1m
             
     oe.openelis.org:
         container_name: [% oe_name %]
@@ -35,7 +41,7 @@ services:
             - "8080:8080"
             - "8443:8443"
         networks:
-            default:
+            openelis-network:
                 ipv4_address: 172.20.1.121
 #eh        extra_hosts: 
 #eh[% extra_hosts %]
@@ -56,17 +62,28 @@ services:
             - source: datasource.password
             - source: common.properties
             - source: extra.properties
-    
+        logging:
+            driver: "local"
+            options:
+              max-size: "20m"
+              max-file: "50"
+        healthcheck:
+            test: ["CMD", "/healthcheck.sh"]
+            timeout: 10s
+            interval: 30s
+            retries: 3
+            start_period: 2m
+
     fhir.openelis.org:
         container_name: [% fhir_api_name %]
-        image: hapiproject/hapi:v5.4.0
+        image: hapi-fhir-jpaserver
 #db        depends_on:
 #db            - db.openelis.org
         ports:
             - "8081:8080"
             - "8444:8443"
         networks:
-            - default
+            - openelis-network
         restart: always
         environment:
           SPRING_CONFIG_LOCATION: file:///run/secrets/hapi_application.yaml
@@ -77,14 +94,42 @@ services:
                       -Djavax.net.ssl.keyStore=/run/secrets/keystore 
                       -Djavax.net.ssl.keyStorePassword=[% keystore_password %] 
                       -Djavax.net.ssl.keyStoreType=pkcs12"
-          
         volumes:
             - [% etc_dir %]hapi_server.xml:/usr/local/tomcat/conf/server.xml
+            - [% etc_dir %]healthcheck.sh:/healthcheck.sh
         secrets:
             - source: hapi_application.yaml
             - source: common.properties
             - source: keystore
             - source: truststore
+        logging:
+            driver: "local"
+            options:
+              max-size: "20m"
+              max-file: "50"
+        healthcheck:
+            test: ["CMD", "/healthcheck.sh"]
+            timeout: 10s
+            interval: 30s
+            retries: 3
+            start_period: 2m
+
+    autoheal:
+        container_name: [% autoheal_name %]
+        image: willfarrell/autoheal:1.2.0
+        tty: true
+        restart: always
+        networks:
+          - openelis-network
+        environment:
+          - AUTOHEAL_CONTAINER_LABEL=all
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        logging:
+            driver: "local"
+            options:
+              max-size: "20m"
+              max-file: "50"
             
 secrets:
   datasource.password:
@@ -105,7 +150,7 @@ secrets:
     file: [% etc_dir %]truststore
     
 networks:
-  default:
+  openelis-network:
     driver: bridge
     ipam:
       config:

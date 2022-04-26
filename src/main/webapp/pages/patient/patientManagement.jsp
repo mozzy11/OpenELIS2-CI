@@ -242,8 +242,8 @@ function  /*string*/ pt_requiredFieldsValidMessage()
 	var returnMessage = "";
 	var oneOfMembers = "";
 	var requiredField = "";
-    var i;
-
+	var i;
+	
 	for( i = 0; i < pt_requiredFields.length; ++i ){
 		if( $(pt_requiredFields[i]).value.blank() ){
 			hasError = true;
@@ -395,11 +395,15 @@ function  /*void*/ updatePatientAge( DOB )
 		}
 	}
 
-
 	var splitDOB = date.split("/");
 	var monthDOB = splitDOB[monthIndex];
 	var dayDOB = splitDOB[dayIndex];
 	var yearDOB = splitDOB[yearIndex];
+
+	if(monthDOB == "xx" || monthDOB == "XX" || dayDOB == "xx" || dayDOB == "XX" ){
+		monthDOB = "01";
+		dayDOB = "01";
+	}
 
 	var birthdate = new Date(yearDOB, monthDOB - 1, dayDOB);
 	var today = new Date();
@@ -541,7 +545,7 @@ function  /*void*/ pt_updateDOB( ageYears, ageMonths, ageDays )
 function  /*void*/ getDetailedPatientInfo()
 {
 	$("patientPK_ID").value = patientSelectID;
-
+	
 	new Ajax.Request (
                        'ajaxQueryXML',  //url
                         {//options
@@ -767,7 +771,7 @@ function  /*void*/ updatePatientEditStatus() {
 	if (updateStatus == "NO_ACTION") {
 		setUpdateStatus("UPDATE");
 	}
-
+	
 	for(var i = 0; i < patientInfoChangeListeners.length; i++){
 			patientInfoChangeListeners[i]($("firstNameID").value,
 										  $("lastNameID").value,
@@ -816,7 +820,7 @@ function  /*void*/ savePage()
 {
 	window.onbeforeunload = null; // Added to flag that formWarning alert isn't needed.
 	var form = document.getElementById("mainForm");
-	form.action = "PatientManagement.do";
+	form.action = "PatientManagement";
 	form.submit();
 }
 
@@ -833,8 +837,8 @@ function updateHealthDistrict( regionElement){
 }
 
 function healthDistrictSuccess( xhr ){
-  	//alert(xhr.responseText);
-
+	  //alert(xhr.responseText);
+	  
 	var message = xhr.responseXML.getElementsByTagName("message").item(0).firstChild.nodeValue;
 	var districts = xhr.responseXML.getElementsByTagName("formfield").item(0).childNodes[0].childNodes;
 	var selected = xhr.responseXML.getElementsByTagName("formfield").item(0).childNodes[1];
@@ -862,24 +866,24 @@ function validatePhoneNumber( phoneElement){
 }
 
 function  processPhoneSuccess(xhr){
-    //alert(xhr.responseText);
-
+	//alert(xhr.responseText);
+	
     var formField = xhr.responseXML.getElementsByTagName("formfield").item(0);
     var message = xhr.responseXML.getElementsByTagName("message").item(0);
-    var success = false;
-
+	var success = false;
+	
     if (message.firstChild.nodeValue == "valid"){
         success = true;
     }
-    var labElement = formField.firstChild.nodeValue;
-
+	var labElement = formField.firstChild.nodeValue;
+	
     setValidIndicaterOnField(success, labElement);
-    pt_setFieldValidity( success, labElement );
-
+	pt_setFieldValidity( success, labElement );
+	
     if( !success ){
         alert( message.firstChild.nodeValue );
-    }
-
+	}
+	
     pt_setSave();
 }
 
@@ -909,15 +913,15 @@ function  processSubjectNumberSuccess(xhr){
     var warning = messageParts[0] == "warning";
     var fail = messageParts[0] == "fail";
     var success = valid || warning;
-    var labElement = formField.firstChild.nodeValue;
-
+	var labElement = formField.firstChild.nodeValue;
+	
     setValidIndicaterOnField(success, labElement);
-    pt_setFieldValidity( success, labElement );
-
+	pt_setFieldValidity( success, labElement );
+	
     if( warning || fail ){
         alert( messageParts[1] );
-    }
-
+	}
+	
     pt_setSave();
 }
 </script>
@@ -926,7 +930,7 @@ function  processSubjectNumberSuccess(xhr){
 <%-- <nested:hidden name='${form.formName}' property="patientProperties.currentDate" id="currentDate"/> --%>
 <form:hidden path="patientProperties.currentDate" id="currentDate"/>
 
-<div id="PatientPage" style="display:inline"  >
+<div id="PatientPage" style="display:inline" >
 <%-- 	<nested:hidden property="patientProperties.patientLastUpdated" name='${form.formName}' id="patientLastUpdated" />
 	<nested:hidden property="patientProperties.personLastUpdated" name='${form.formName}'  id="personLastUpdated"/> --%>
 <form:hidden path="patientProperties.patientLastUpdated" id="patientLastUpdated"/>
@@ -980,13 +984,13 @@ function  processSubjectNumberSuccess(xhr){
         </td>
     </tr>
     <tr>
-        <td >&nbsp;
-
+		<td >&nbsp;
+			
         </td>
         <%} %>
         <% if( supportSubjectNumber){ %>
-        <td>&nbsp;
-
+		<td>&nbsp;
+			
         </td>
         <td style="text-align:right;">
             <spring:message code="patient.subject.number"/>:
@@ -1005,8 +1009,8 @@ function  processSubjectNumberSuccess(xhr){
         </td>
     </tr>
     <tr>
-        <td >&nbsp;
-
+		<td >&nbsp;
+			
         </td>
         <% } %>
         <% if( supportNationalID ){ %>
@@ -1014,8 +1018,8 @@ function  processSubjectNumberSuccess(xhr){
             <%=MessageUtil.getContextualMessage("patient.NationalID") %>:
             <% if(nationalIDRequired){ %>
             <span class="requiredlabel">*</span>
-            <% } %>
-
+			<% } %>
+			
         </td>
         <td >
            <%--  <nested:text name='${form.formName}'
@@ -1026,11 +1030,11 @@ function  processSubjectNumberSuccess(xhr){
                          size="60"/> --%>
             <form:input path="patientProperties.nationalId" id="nationalID" onchange="validateSubjectNumber(this, 'nationalId');updatePatientEditStatus();" size="60"/>
         </td>
-        <td >&nbsp;
-
+		<td >&nbsp;
+			
         </td>
-        <td >&nbsp;
-
+		<td >&nbsp;
+			
         </td>
     </tr>
     <%} %>
@@ -1510,17 +1514,10 @@ function  processSubjectNumberSuccess(xhr){
 	<% if( ConfigurationProperties.getInstance().isPropertyValueEqual(ConfigurationProperties.Property.PATIENT_NATIONALITY, "true") ){ %>
 		<tr>
 			<td style="text-align:right;"><spring:message code="patient.nationality"/>: </td>
-				<td>
+				<td>				
 					<form:select path="patientProperties.nationality" id="nationalityID">
-					<option value="0" ></option>
-					<form:options items="${patientProperties.nationalityList}" itemLabel="value" itemValue="value"/>
-					</form:select>
-					<%-- <html:select name='${form.formName}'
-								 property="patientProperties.nationality"
-							     id="nationalityID" >
-					<option value="0" ></option>
-					<html:optionsCollection name="${form.formName}" property="patientProperties.nationalityList" label="value" value="value" />
-					</html:select> --%>
+					<option value="0" ></option>	
+					</form:select>					
 				</td>
 				<td><spring:message code="specify"/>:</td>
 				<td>
@@ -1559,3 +1556,5 @@ function registerPatientChangedForManagement(){
 
 registerPatientChangedForManagement();
 </script> 
+<script type="text/javascript" src="scripts/countries.js?" ></script>
+

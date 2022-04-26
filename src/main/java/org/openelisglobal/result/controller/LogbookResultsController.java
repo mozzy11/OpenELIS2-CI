@@ -73,10 +73,12 @@ import org.openelisglobal.result.valueholder.ResultInventory;
 import org.openelisglobal.result.valueholder.ResultSignature;
 import org.openelisglobal.resultlimit.service.ResultLimitService;
 import org.openelisglobal.resultlimits.valueholder.ResultLimit;
+import org.openelisglobal.role.service.RoleService;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
 import org.openelisglobal.spring.util.SpringContext;
 import org.openelisglobal.statusofsample.util.StatusRules;
+import org.openelisglobal.systemuser.service.UserService;
 import org.openelisglobal.test.beanItems.TestResultItem;
 import org.openelisglobal.test.service.TestSectionService;
 import org.openelisglobal.test.valueholder.TestSection;
@@ -138,9 +140,14 @@ public class LogbookResultsController extends LogbookResultsBaseController {
     private NoteService noteService;
     @Autowired
     private FhirTransformService fhirTransformService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private RoleService roleService;
 
     private final String RESULT_SUBJECT = "Result Note";
     private final String REFERRAL_CONFORMATION_ID;
+    private static final String ROLE_RESULTS = "Results";
 
     private LogbookResultsController(ReferralTypeService referralTypeService) {
         ReferralType referralType = referralTypeService.getReferralTypeByName("Confirmation");
@@ -174,7 +181,8 @@ public class LogbookResultsController extends LogbookResultsBaseController {
                     .getNumberedListWithLeadingBlank(DisplayListService.ListType.REJECTION_REASONS));
 
             // load testSections for drop down
-            List<IdValuePair> testSections = DisplayListService.getInstance().getList(ListType.TEST_SECTION);
+            String resultsRoleId =  roleService.getRoleByName(ROLE_RESULTS).getId();
+            List<IdValuePair> testSections = userService.getUserTestSections(getSysUserId(request) ,resultsRoleId);
             newForm.setTestSections(testSections);
             newForm.setTestSectionsByName(DisplayListService.getInstance().getList(ListType.TEST_SECTION_BY_NAME));
         }
@@ -224,6 +232,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
 
         List<TestResultItem> tests;
+        List<TestResultItem> filteredTests = new ArrayList<>() ;
 
         ResultsPaging paging = new ResultsPaging();
         List<InventoryKitItem> inventoryList = new ArrayList<>();
@@ -238,9 +247,10 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
             if (!GenericValidator.isBlankOrNull(form.getTestSectionId())) {
                 tests = resultsLoadUtility.getUnfinishedTestResultItemsInTestSection(form.getTestSectionId());
+                filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), tests ,ROLE_RESULTS);
                 int count = resultsLoadUtility.getTotalCountAnalysisByTestSectionAndStatus(form.getTestSectionId());
                 request.setAttribute("analysisCount", count);
-                request.setAttribute("pageSize", tests.size());
+                request.setAttribute("pageSize", filteredTests.size());
 
                 TestSection ts = null;
                 if (!GenericValidator.isBlankOrNull(form.getTestSectionId())) {
@@ -263,9 +273,10 @@ public class LogbookResultsController extends LogbookResultsBaseController {
                 form.setSearchFinished(true);
             } else if (!GenericValidator.isBlankOrNull(form.getAccessionNumber())) {
                 tests = resultsLoadUtility.getUnfinishedTestResultItemsByAccession(form.getAccessionNumber());
-                int count = resultsLoadUtility.getTotalCountAnalysisByAccessionAndStatus(form.getAccessionNumber());
+                filteredTests = userService.filterResultsByLabUnitRoles(getSysUserId(request), tests ,ROLE_RESULTS);
+                int count = resultsLoadUtility.getTotalCountAnalysisByAccessionAndStatus(form.getAccessionNumber());  
                 request.setAttribute("analysisCount", count);
-                request.setAttribute("pageSize", tests.size());
+                request.setAttribute("pageSize", filteredTests.size());
                 form.setSearchFinished(true);
             } else {
                 tests = new ArrayList<>();
@@ -273,12 +284,12 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
             if (ConfigurationProperties.getInstance().isPropertyValueEqual(Property.PATIENT_DATA_ON_RESULTS_BY_ROLE,
                     "true") && !userHasPermissionForModule(request, "PatientResults")) {
-                for (TestResultItem resultItem : tests) {
+                for (TestResultItem resultItem : filteredTests) {
                     resultItem.setPatientInfo("---");
                 }
             }
 
-            paging.setDatabaseResults(request, form, tests);
+            paging.setDatabaseResults(request, form, filteredTests);
 
         } else {
             int requestedPageNumber = Integer.parseInt(requestedPage);
@@ -615,8 +626,11 @@ public class LogbookResultsController extends LogbookResultsBaseController {
     }
 
     private String getStatusForTestResult(TestResultItem testResult, boolean alwaysValidate) {
-        if (testResult.isShadowRejected()) {
+        if (testResult.isShadowRejected() && ConfigurationProperties.getInstance()
+                .isPropertyValueEqual(Property.VALIDATE_REJECTED_TESTS, "true")) {
             return SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalRejected);
+        } else if (testResult.isShadowRejected()) {
+            return SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.Canceled);
         } else if (alwaysValidate || !testResult.isValid() || ResultUtil.isForcedToAcceptance(testResult)) {
             return SpringContext.getBean(IStatusService.class).getStatusID(AnalysisStatus.TechnicalAcceptance);
         } else if (noResults(testResult.getShadowResultValue(), testResult.getMultiSelectResultValues(),
@@ -724,7 +738,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
         if (FWD_SUCCESS.equals(forward)) {
             return "resultsLogbookDefinition";
         } else if (FWD_SUCCESS_INSERT.equals(forward)) {
-            return "redirect:/LogbookResults.do";
+            return "redirect:/LogbookResults";
         } else if (FWD_VALIDATION_ERROR.equals(forward)) {
             return "resultsLogbookDefinition";
         } else if (FWD_FAIL_INSERT.equals(forward)) {
@@ -736,7 +750,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
     private String findAccessionForward(String forward) {
         if (FWD_SUCCESS_INSERT.equals(forward)) {
-            return "redirect:/AccessionResults.do";
+            return "redirect:/AccessionResults";
         } else if (FWD_VALIDATION_ERROR.equals(forward)) {
             return "accessionResultDefinition";
         } else if (FWD_FAIL_INSERT.equals(forward)) {
@@ -748,7 +762,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
     private String findPatientForward(String forward) {
         if (FWD_SUCCESS_INSERT.equals(forward)) {
-            return "redirect:/PatientResults.do";
+            return "redirect:/PatientResults";
         } else if (FWD_VALIDATION_ERROR.equals(forward)) {
             return "patientResultDefinition";
         } else if (FWD_FAIL_INSERT.equals(forward)) {
@@ -760,7 +774,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
 
     private String findStatusForward(String forward) {
         if (FWD_SUCCESS_INSERT.equals(forward)) {
-            return "redirect:/StatusResults.do?blank=true";
+            return "redirect:/StatusResults?blank=true";
         } else if (FWD_VALIDATION_ERROR.equals(forward)) {
             return "statusResultDefinition";
         } else if (FWD_FAIL_INSERT.equals(forward)) {
@@ -774,7 +788,7 @@ public class LogbookResultsController extends LogbookResultsBaseController {
         if (FWD_SUCCESS.equals(forward)) {
             return "resultsLogbookDefinition";
         } else if (FWD_SUCCESS_INSERT.equals(forward)) {
-            return "redirect:/RangeResults.do";
+            return "redirect:/RangeResults";
         } else if (FWD_VALIDATION_ERROR.equals(forward)) {
             return "resultsLogbookDefinition";
         } else if (FWD_FAIL_INSERT.equals(forward)) {

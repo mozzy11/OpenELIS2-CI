@@ -17,6 +17,21 @@ import org.openelisglobal.validation.annotations.ValidDate;
 //values used in jasperreports
 public class ReportForm extends BaseForm {
 
+    public enum DateType {
+        RESULT_DATE("report.label.datetype.resultdate"), ORDER_DATE("report.label.datetype.orderdate");
+
+        String messageKey;
+
+        DateType(String messageKey) {
+            this.messageKey = messageKey;
+        }
+
+        public String getMessageKey() {
+            return this.messageKey;
+        }
+
+    }
+
     private boolean noRequestSpecifications = false;
 
     private String type = "";
@@ -108,6 +123,20 @@ public class ReportForm extends BaseForm {
 
     private String selPatient;
 
+    private boolean useSiteSearch;
+
+    private String referringSiteId;
+
+    private List<IdValuePair> referringSiteList;
+
+    private String referringSiteDepartmentId;
+
+    private List<IdValuePair> referringSiteDepartmentList;
+
+    private boolean onlyResults;
+
+    private DateType dateType;
+
     public ReportForm() {
         setFormName("ReportForm");
     }
@@ -156,6 +185,14 @@ public class ReportForm extends BaseForm {
         return accessionDirect;
     }
 
+    public String getAccessionDirectNoSuffix() {
+        if (accessionDirect == null || !accessionDirect.contains(".")) {
+            return accessionDirect;
+        } else {
+            return accessionDirect.substring(0, accessionDirect.indexOf('.'));
+        }
+    }
+
     public void setAccessionDirect(String accessionDirect) {
         this.accessionDirect = accessionDirect;
     }
@@ -178,6 +215,14 @@ public class ReportForm extends BaseForm {
 
     public String getHighAccessionDirect() {
         return highAccessionDirect;
+    }
+
+    public String getHighAccessionDirectNoSuffix() {
+        if (highAccessionDirect == null || !highAccessionDirect.contains(".")) {
+            return highAccessionDirect;
+        } else {
+            return highAccessionDirect.substring(0, highAccessionDirect.indexOf('.'));
+        }
     }
 
     public void setHighAccessionDirect(String highAccessionDirect) {
@@ -429,5 +474,61 @@ public class ReportForm extends BaseForm {
 
     public void setAnalysisIds(List<@Pattern(regexp = ValidationHelper.ID_REGEX) String> analysisIds) {
         this.analysisIds = analysisIds;
+    }
+
+    public boolean isUseSiteSearch() {
+        return useSiteSearch;
+    }
+
+    public void setUseSiteSearch(boolean useSiteSearch) {
+        this.useSiteSearch = useSiteSearch;
+    }
+
+    public List<IdValuePair> getReferringSiteList() {
+        return referringSiteList;
+    }
+
+    public void setReferringSiteList(List<IdValuePair> referringSiteList) {
+        this.referringSiteList = referringSiteList;
+    }
+
+    public String getReferringSiteId() {
+        return referringSiteId;
+    }
+
+    public void setReferringSiteId(String referringSiteId) {
+        this.referringSiteId = referringSiteId;
+    }
+
+    public String getReferringSiteDepartmentId() {
+        return referringSiteDepartmentId;
+    }
+
+    public void setReferringSiteDepartmentId(String referringSiteDepartmentId) {
+        this.referringSiteDepartmentId = referringSiteDepartmentId;
+    }
+
+    public List<IdValuePair> getReferringSiteDepartmentList() {
+        return referringSiteDepartmentList;
+    }
+
+    public void setReferringSiteDepartmentList(List<IdValuePair> referringSiteDepartmentList) {
+        this.referringSiteDepartmentList = referringSiteDepartmentList;
+    }
+
+    public boolean isOnlyResults() {
+        return onlyResults;
+    }
+
+    public void setOnlyResults(boolean onlyResults) {
+        this.onlyResults = onlyResults;
+    }
+
+    public DateType getDateType() {
+        return dateType;
+    }
+
+    public void setDateType(DateType dateType) {
+        this.dateType = dateType;
     }
 }

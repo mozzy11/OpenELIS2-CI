@@ -8,6 +8,8 @@ which we are phasing out, has the code for importing analyzer results as
 part of the core of OpenELIS. The newer model which all new analyzers
 should use is a plugin model.
 
+You can find a set of precompiled analyzer plug-ins in our [installer folder here](https://www.dropbox.com/sh/xzjxca5ya73dylt/AACf35yDhjerS1V-C1SVNgJ2a?dl=0)
+
 ## Basics
 
 There is a directory /var/lib/openelis-global/plugins/ in OpenElis. Any jar file in this directory
@@ -77,10 +79,7 @@ Creation Steps
 .. _SourceTree: http://www.sourcetreeapp.com/
 
 
-# How to add Analyzer on the main OpenELIS project?
-1. The plugins must be compile on a jar file
-2. the jar file must be copy on the folder: -- to update --
-3. the main project will be recompile including the jar file, the plugin is proper upload when its available in the menu.
+
 4. login to OpenELIS -> Results -> from Analyzer -> Analyzer name.
 
 
@@ -114,7 +113,7 @@ There are four configurable values in the file:
 `my $upLoadtargetURL = 'https://localhost:8443/[openelisURL]/importAnalyzer';`
 
    *  *The user name and password.*  
-   This user name and password must have been added as a user to the application.  The user should be added with no roles.
+   This user name and password must have been added as a user to the application.  The user should be added with the results entry roles.
 `my $upLoadUserName = '';
 my $upLoadPassword = '';`
 

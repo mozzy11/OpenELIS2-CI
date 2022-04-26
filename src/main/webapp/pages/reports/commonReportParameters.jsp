@@ -128,7 +128,7 @@ function /*boolean*/ missingValue( id ){
 
 function onCancel(){
 	var form = document.getElementById("mainForm");
-	form.action = "CancelReport.do";
+	form.action = "CancelReport";
 	form.submit();
 	return true;
 }
@@ -136,7 +136,7 @@ function onCancel(){
 function onPrint(){
 	if( formCorrect()){
 		var form = document.getElementById("mainForm");
-		form.action = "ReportPrint.do";
+		form.action = "ReportPrint";
 		form.target = "_blank";
 		form.method = 'get';
 		form.submit();
@@ -198,17 +198,17 @@ function setSaveButton() {
 <form:hidden path="type" id="reportType"/>
 
 <c:if test="${not form.noRequestSpecifications}">
-
-  <c:if test="${form.usePatientSearch}">
-	<tiles:insertAttribute name="patientEnhancedSearch" />
-  </c:if>
-
-  <c:if test="${form.useAccessionDirect}">
-	  <div><strong><%= MessageUtil.getContextualMessage("report.enter.labNumber.headline") %></strong></div>
-  </c:if>
-  
   <div>
 
+	  <c:if test="${form.useAccessionDirect}">
+  		<h3><spring:message code="report.enter.labNumber.headline"/></h3>
+	  	<spring:message code="sample.search.scanner.instructions"/>.
+	  </c:if>
+	  <c:if test="${form.useHighAccessionDirect}">
+	  	<spring:message code="sample.search.scanner.instructions.highaccession"/>
+	  </c:if>
+	  <br>
+	  <br>
 	  <c:if test="${form.useAccessionDirect}">
 		<span style="padding-left: 10px">
 			<%= MessageUtil.getContextualMessage("report.from") %>
@@ -224,18 +224,21 @@ function setSaveButton() {
 			           cssClass="input-medium"
 			           maxlength='<%= Integer.toString(AccessionNumberUtil.getMaxAccessionLength())%>'/>
 	  </c:if>
-	  <c:if test="${form.useAccessionDirect}">
-	  
-	  	<spring:message code="sample.search.scanner.instructions"/>
-	  </c:if>
-	  <c:if test="${not form.useAccessionDirect}">
-	  	<c:if test="${form.useAccessionDirect}">
-	  		<spring:message code="sample.search.scanner.instructions"/>
-	  	</c:if>
-	  </c:if>
   </div>
-  <c:if test="${form.useHighAccessionDirect}">
-    <div><span style="padding-left: 10px"><%= MessageUtil.getContextualMessage("report.enter.labNumber.detail") %></span></div>
+  
+<%--   <c:if test="${form.useHighAccessionDirect}"> --%>
+<%--     <div><span style="padding-left: 10px"><%= MessageUtil.getContextualMessage("report.enter.labNumber.detail") %></span></div> --%>
+<%--   </c:if> --%>
+
+  <c:if test="${form.usePatientSearch}">
+  		<h3><spring:message code="report.enter.patient.headline"/></h3>
+  		<spring:message code="report.enter.patient.headline.description"/>
+ 	
+	<tiles:insertAttribute name="patientEnhancedSearch" />
+  </c:if>
+  <c:if test="${form.useSiteSearch}">
+  		<h3><spring:message code="report.enter.site.headline"/></h3>
+		<tiles:insertAttribute name="siteSearch" />
   </c:if>
   <c:if test="${form.usePatientNumberDirect}">
   

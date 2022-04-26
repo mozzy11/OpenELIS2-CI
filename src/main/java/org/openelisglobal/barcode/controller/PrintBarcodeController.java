@@ -111,6 +111,11 @@ public class PrintBarcodeController extends BaseController {
         addPrePrintFields(form);
         addPatientSearch(displayObjects);
 
+        request.setAttribute("numDefaultOrderLabels",
+                ConfigurationProperties.getInstance().getPropertyValue(Property.DEFAULT_ORDER_PRINTED));
+        request.setAttribute("numDefaultSpecimenLabels",
+                ConfigurationProperties.getInstance().getPropertyValue(Property.DEFAULT_SPECIMEN_PRINTED));
+
         if (org.apache.commons.validator.GenericValidator.isBlankOrNull(request.getParameter("accessionNumber"))) {
             return findForward(FWD_SUCCESS, displayObjects, form);
         }
@@ -118,6 +123,7 @@ public class PrintBarcodeController extends BaseController {
         String accessionNumber = form.getAccessionNumber();
         Sample sample = getSample(accessionNumber);
         if (sample != null && !org.apache.commons.validator.GenericValidator.isBlankOrNull(sample.getId())) {
+            form.setAccessionNumber(sample.getAccessionNumber());
             List<SampleItem> sampleItemList = getSampleItems(sample);
             setPatientInfo(displayObjects, sample);
             List<SampleEditItem> currentTestList = getCurrentTestInfo(sampleItemList, accessionNumber, false);
